@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ["windows", "darwin", "linux"]
+        arch: ["x64", "arm64"]
+        include:
+        - platform: windows
+          arch: ia32
+        - platform: linux
+          arch: ia32
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - run: sudo apt-get install -y wine
+    - run: yarn install
+    - run: yarn build --arch=${{ matrix.arch }} --platform=${{ matrix.platform }}
+    - run: zip -r Discord-${{ matrix.platform }}-${{ matrix.arch }}.zip Discord-*
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Discord-${{ matrix.platform }}-${{ matrix.arch }}.zip
+        path: Discord-${{ matrix.platform }}-${{ matrix.arch }}.zip
+    - name: Get Release Upload URL
+      if: github.event_name == 'release'
+      id: get_release
+      uses: bruceadams/get-release@v1.2.2
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Upload Release Asset (Standalone)
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        asset_path: Discord-${{ matrix.platform }}-${{ matrix.arch }}.zip
+        asset_name: Discord-${{ matrix.platform }}-${{ matrix.arch }}.zip
+        asset_content_type: application/zip

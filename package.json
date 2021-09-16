@@ -1,0 +1,8 @@
+{
+	"devDependencies": {
+		"nativefier": "^45.0.0"
+	},
+	"scripts": {
+		"build": "nativefier https://discord.com/app --name=Discord --single-instance --icon=icon.png --title-bar-style=hidden --inject=inject.css"
+	}
+}
